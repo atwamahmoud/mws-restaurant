@@ -1,0 +1,13 @@
+{
+    "name": "Restaurant Reviews",
+    "short_name": "Reviews",
+    "theme_color": "#252831",
+    "display": "standalone",
+    "background_color": "#f3f3f3",
+    "description": "A simple application for restaurant reviews, logo is from https://www.iconfinder.com/icons/408055/award_badge_favorites_gold_medal_rating_reward_icon",
+    "icons": [{
+      "src": "img/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }]
+  }
