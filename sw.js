@@ -1,19 +1,18 @@
 //Note::This code is inspired from Udacity's Offline first mobile apps course code...
 
-const cacheName = 'restaurant-reviews-v31';
+const cacheName = 'restaurant-reviews-v34';
 let itemsToBeCached = [
     './index.html',
     './restaurant.html',
-    './css/styles.css',
-    './js/main.js',
-    './js/dbhelper.js',
-    './js/restaurant_info.js',
-    './img/notAvailable.jpg',
-    './img/loading.gif',
+    './css/styles.min.css',
+    './js/main.min.js',
+    './js/dbhelper.min.js',
+    './js/restaurant_info.min.js',
+    './img/webp/notAvailable.webp',
     './manifest.json'
 ]
 for (let i = 1; i <= 10; i++)
-    itemsToBeCached.push(`./img/${i}.jpg`);
+    itemsToBeCached.push(`./img/webp/${i}.webp`);
 
 //Caching data on install
 self.addEventListener('install', event => {
@@ -47,14 +46,10 @@ self.addEventListener('fetch', event => {
     const url = event.request.url;
     const urlObj = new URL(url);
     const acceptedIndexPathNames = [
-        '/mws-restaurant-stage-1',
-        '/mws-restaurant-stage-1/',
-        '/mws-restaurant-stage-1/index.html',
         '/',
         '/index.html'
     ]
     const acceptedRestPathNames = [
-        '/mws-restaurant-stage-1/restaurant.html',
         '/restaurant.html'
     ]
 
@@ -89,4 +84,49 @@ self.addEventListener('fetch', event => {
         )
 
 
+});
+
+
+self.addEventListener('sync', function(event) {
+    
+    if (event.tag === 'offline') {
+        
+        event.waitUntil(
+            caches.open('failed-requests')
+            .then(cache => {
+                console.log('matching the cache in service worker');
+                
+                return  cache.match('http://localhost:1337/reviews/')
+                .then(resp => resp.json())
+                .then(data => {
+
+                    let formData = new FormData();
+
+                    formData.append('restaurant_id', data.id);
+                    formData.append('name', data.name);
+                    formData.append('rating', data.rating);
+                    formData.append('comments', data.comment);
+
+                    return fetch(data.url, {
+                    method: 'POST',
+                    body: formData
+                    })
+
+                }).then(resp => resp.json())
+                .then(resp => {
+                    //As mentioned in the specs here, https://wicg.github.io/BackgroundSync/spec/
+                    //Promises are nested to be in the same scope of 'resp' variable.
+                    clients.matchAll({
+                        includeUncontrolled: true
+                    }).then(clients => {
+                        for (const client of clients){
+                            client.postMessage(resp);
+                        }
+                    })
+                
+                })
+            })
+        )
+    }
+  
 });

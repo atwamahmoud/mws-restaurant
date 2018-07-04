@@ -4,13 +4,11 @@
 <head>
   <!-- Normalize.css for better cross-browser consistency -->
   <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
-  <!-- Main CSS file -->
-  <link rel="stylesheet" href="css/styles.css" type="text/css">
   <!--Meta data-->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!--PWA Checklist...-->
-  <link rel="manifest" href="./manifest.json">  
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#252831"/>
 
   <title>Restaurant Info</title>
@@ -26,7 +24,7 @@
       <ul aria-label="Breadcrumb" id="breadcrumb">
         <li><a href="./">Home</a></li>
       </ul>
-    
+
     </nav>
     <!-- End breadcrumb -->
     <!-- End nav -->
@@ -40,7 +38,7 @@
       <div id="map" role="application" aria-label="Google map" tabindex="0"></div>
     </section>
     <!-- End map -->
-    <!-- Beginning restaurant & reviews-->    
+    <!-- Beginning restaurant & reviews-->
     <section class="restaurant-main-container">
       <!-- Beginning restaurant -->
       <section id="restaurant-container">
@@ -49,13 +47,49 @@
         <p tabindex="0" id="restaurant-cuisine"></p>
         <p tabindex="0" id="restaurant-address"></p>
         <table tabindex="0" aria-label="Working Hours" id="restaurant-hours"></table>
+        <section id="toScroll"></section>      
       </section>
       <!-- end restaurant -->
       <!-- Beginning reviews -->
-      <section id="reviews-container">
+      <section id="reviews-container" class="section-container">
         <ul id="reviews-list"></ul>
       </section>
       <!-- End reviews -->
+
+
+      <!-- Start Review Addition section -->
+      <section class="section-container">
+
+        <!-- Have the same importance as the Reviews listing section -->
+        <h3 tabindex="0" class="section-title">Add a Review</h3>
+
+        <form class="review-form" action="#" method="#">
+
+          <input aria-label="Please Enter your name" class="input-box name-box" type="text" name="name-input" placeholder="Name">
+
+          <fieldset aria-label="Choose an overall rating, 
+            you can switch between values using arrow keys" tabindex="0" class="radio-group">
+
+          <legend class="label-radio section-title">Rating</legend>
+
+            <label class="radio_btn">5 <input type="radio" name="rating" value="5"></label>
+            <label class="radio_btn">4 <input type="radio" name="rating" value="4"></label>
+            <label class="radio_btn">3 <input type="radio" name="rating" value="3"></label>
+            <label class="radio_btn">2 <input type="radio" name="rating" value="2"></label>
+            <label class="radio_btn">1 <input type="radio" name="rating" value="1"></label>
+            
+          </fieldset>
+
+          <textarea aria-label="Please enter your opinion" 
+            class="input-box review-text" name="review-textarea" placeholder="Review"></textarea>
+
+          <button type="submit" id="submit-btn" class="submit-btn" name="button">Submit</button>
+
+        </form>
+
+      </section>
+      <!-- End Review Addition form -->
+      
     </section>
     <!-- End restaurand & reviews -->
   </main>
@@ -66,12 +100,12 @@
     Copyright (c) 2017 <a href="./"><strong>Restaurant Reviews</strong></a> All Rights Reserved.
   </footer>
   <!-- End footer -->
-
+  <!-- Stylesheet is added to the bottom to avoid rendering blocking  -->
+  <link rel="stylesheet" href="css/styles.min.css" type="text/css">
   <!-- Beginning scripts -->
-  <!-- Database helpers -->
-  <script type="text/javascript" src="js/dbhelper.js"></script>
+  <script type="text/javascript" src="js/dbhelper.min.js"></script>
   <!-- Main javascript file -->
-  <script type="text/javascript" src="js/restaurant_info.js"></script>
+  <script type="text/javascript" src="js/restaurant_info.min.js"></script>
   <!-- Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuZe_zhgg8VwSFgi1-PGyq-yfEvGecYME&libraries=places&callback=initMap"></script>
   <!-- End scripts -->

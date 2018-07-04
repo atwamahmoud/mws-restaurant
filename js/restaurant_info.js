@@ -3,9 +3,6 @@ var map;
 
 
 /**
- * Registers service worker...
- */
-/**
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
@@ -31,10 +28,12 @@ fetchRestaurantFromURL = (callback) => {
   if (self.restaurant) { // restaurant already fetched!
     callback(null, self.restaurant)
     return;
+  }else{
+    self.restaurant = {};
   }
   const id = getParameterByName('id');
   if (!id) { // no id found in URL
-    error = 'No restaurant id in URL'
+    error = 'No restaurant id in URL';
     callback(error, null);
   } else {
     DBHelper.fetchRestaurantById(id, (error, restaurant) => {
@@ -43,8 +42,13 @@ fetchRestaurantFromURL = (callback) => {
         console.error(error);
         return;
       }
-      fillRestaurantHTML();
-      callback(null, restaurant)
+
+      DBHelper.fetchReviewsByRestaurantId(id, (error, reviews) => {
+        self.restaurant.reviews = reviews;
+        fillRestaurantHTML();
+        callback(null, restaurant);
+      });
+
     });
   }
 }
@@ -60,10 +64,9 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
   address.setAttribute('aria-label', 'Address: ' + restaurant.address);
-  
+
   const image = document.getElementById('restaurant-img');
   image.className = 'restaurant-img'
-  image.src = './img/loading.gif';
   image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant))
   DBHelper.INTERSECTION_OBSERVER.observe(image);
   image.setAttribute('alt', 'A picture of ' + restaurant.name + ' restaurant.');
@@ -98,11 +101,11 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
     row.appendChild(time);
 
     row.setAttribute('tabindex', '0');
-    
-    const label = (timeStr === "Closed") ? 
-      `On ${key} The restaurant is closed` : 
+
+    const label = (timeStr === "Closed") ?
+      `On ${key} The restaurant is closed` :
       `On ${key} from ${timeStr.replace(/-/gi, 'to').replace(/,/gi, ' And From')}`;
-    
+
     row.setAttribute('aria-label', label);
 
     hours.appendChild(row);
@@ -112,12 +115,12 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (reviews = self.restaurant.reviews, prepend = false) => {
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h3');
-  title.innerHTML = 'Reviews';
-  container.appendChild(title);
+  title.innerHTML = 'Reviews';  
   title.setAttribute('tabindex', '0');
+  title.classList.add('section-title');
 
   if (!reviews) {
     const noReviews = document.createElement('p');
@@ -126,10 +129,20 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     return;
   }
   const ul = document.getElementById('reviews-list');
-  reviews.forEach(review => {
-    ul.appendChild(createReviewHTML(review));
-  });
-  container.appendChild(ul);
+  if(Array.isArray(reviews))
+    reviews.forEach(review => {
+      ul.appendChild(createReviewHTML(review));
+    });
+  else
+    if(prepend) ul.prepend(createReviewHTML(reviews))
+    else ul.appendChild(createReviewHTML(reviews));
+
+  if(!prepend) {
+    container.appendChild(title);
+    container.appendChild(ul);
+  }else{
+    location.href = "#toScroll"
+  }
 }
 
 /**
@@ -146,11 +159,18 @@ createReviewHTML = (review) => {
   name.innerHTML = review.name;
   nameAndDate.appendChild(name);
 
+
+  const dateObj = new Date(review.updatedAt);
+  const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+
+  const month = months[dateObj.getMonth()];
   const date = document.createElement('span');
-  
+
   date.classList.add("review-date");
 
-  date.innerHTML = review.date;
+
+  date.innerHTML = `${month}, ${dateObj.getDate()}`;
   nameAndDate.appendChild(date);
   li.appendChild(nameAndDate);
 
@@ -207,3 +227,70 @@ getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+
+
+/**
+* Fetch the data from DOM before submit
+*/
+getData = _ => {
+  const name = document.querySelector('.name-box').value;
+  const comment = document.querySelector('.review-text').value;
+  const ratings = document.querySelectorAll('input[type="radio"]');
+  let rating = null;
+
+  for(let i = 0; i<ratings.length; i++){
+    if(ratings[i].checked) {
+      rating = ratings[i].value;
+      break;
+    }
+  }
+
+  return {
+    name: name,
+    comment: comment,
+    rating: rating,
+    url: 'http://localhost:1337/reviews/',
+    id: getParameterByName('id')
+  };
+}
+
+/**
+* Validates & send the review to server.
+*/
+addReview = _ => {
+  const data = getData();
+
+  
+  if(!data) return;
+
+  navigator.serviceWorker.onmessage = e => {
+    fillReviewsHTML(e.data, true);//Update the UI.
+    DBHelper.addReviews([e.data], true);//Save it in IDB.
+  }
+
+  sendReview(data);
+}
+
+sendReview = (data) => {
+
+  //Sending all review through the service worker.
+  //Same Idea as the outbox in Jake Archibald's example:
+    //https://wicg.github.io/BackgroundSync/spec/
+  DBHelper.addFailedReview(data).then(_ => {    
+    return DBHelper.registerSW();//Since the registration object contains the sync object.
+  }).then(reg => {    
+    reg.sync.register('offline');
+  })
+
+
+}
+
+(function() {
+  const submitBtn = document.querySelector('#submit-btn');
+  submitBtn.addEventListener('click', e => {
+    e.preventDefault();//Prevents the form from submitting.
+    addReview();
+  })
+
+})();

@@ -9,7 +9,9 @@ var markers = []
 document.addEventListener('DOMContentLoaded', (event) => {
   fetchNeighborhoods();
   fetchCuisines();
-  // addObservers();
+  DBHelper.fetchAndAddBuiltInReviews(_ => {
+    console.log('Built-in reviews are added');
+  });
 });
 /**
  * Register a service worker as sw.js with a default scope level of '/'
@@ -148,16 +150,13 @@ createRestaurantHTML = (restaurant) => {
 
   const image = document.createElement('img');
   image.className = 'restaurant-img';
-  //Loading gif attribution to Barış Ertufan
-  //https://dribbble.com/shots/1137881-Loading-Animation-2
-  image.src = './img/loading.gif'; 
   image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant));
   DBHelper.INTERSECTION_OBSERVER.observe(image);
   const alt = (restaurant.photograph) ?
     `A picture of ${restaurant.name} restaurant.` :
     'No available image for this restaurant.'
 
-  
+
 
   image.setAttribute('alt', alt);
   figure.append(image);
@@ -174,10 +173,24 @@ createRestaurantHTML = (restaurant) => {
   address.innerHTML = restaurant.address;
   figCaption.append(address);
 
+
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
   figCaption.append(more);
+
+  const fav = document.createElement('button');
+  fav.innerHTML = '★';
+  fav.classList.add('fav-btn');
+  fav.addEventListener('click', e => {
+    console.log(e.target);
+    e.target.classList.toggle('actual-fav');
+    addToFav(restaurant);
+  })
+  if(restaurant.is_favorite !== "false" && restaurant.is_favorite)
+    fav.classList.add('actual-fav');
+
+  figCaption.append(fav);
 
   figure.append(figCaption);
   li.appendChild(figure);
@@ -216,7 +229,7 @@ addObservers = () => {
   const observer = new IntersectionObserver(entries => {
     for (entry of entries) {
       if (entry.isIntersecting) {
-        //change let to const. 
+        //change let to const.
         //You're changing the element not its reference is the script.
         let img = entry.target;
         img.setAttribute('src', img.getAttribute('data-src'));
@@ -226,9 +239,28 @@ addObservers = () => {
   })
 
   const imgs = document.getElementsByClassName('restaurant-img');
-  console.log(imgs.length);
   for (let i = 0; i<imgs.length; i++) {
-    console.log(i);
     observer.observe(imgs[i]);
   }
+}
+
+/**
+* toggles the restaurant's favourite state, And updates it in the IDB.
+*/
+
+addToFav = (restaurant) => {
+  const isFav = (restaurant.is_favorite !== "false" && restaurant.is_favorite) ? false : true;
+  const url = `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=${isFav}`;
+
+  console.log(url);
+
+  return fetch(url, {
+    method: 'PUT'
+  })
+  .then(resp => resp.json())
+  .then(resp => {
+    return DBHelper.addRestaurants([resp]);
+  }).catch(err => {
+    console.error(err);
+  })
 }
