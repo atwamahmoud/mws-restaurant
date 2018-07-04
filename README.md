@@ -7,8 +7,11 @@
 
 # Lighthouse audits' screenshots.
 
+## Home Page
+![Home Page](https://raw.githubusercontent.com/atwamahmoud/mws-restaurant/master/scores_screenshots/home_page.png)
 
-
+## Restaurant Page
+![Restaurant Page](https://raw.githubusercontent.com/atwamahmoud/mws-restaurant/master/scores_screenshots/restaurant_page.png)
 
 
 
