@@ -3,7 +3,7 @@
 ### I've also enhanced its performance and loading speed.
 ### A part of Mobile Web Specialist Nanodegree program offered by Udacity!
 ### Please note that the this version requires a backend and this is only the front-end!
-### A live, server independent version can be found at : 
+### A live, server independent version can be found at : [Restaurant Reviews Stage-1](https://atwamahmoud.github.io/mws-restaurant-stage-1/)
 
 # Lighthouse audits' screenshots.
 
